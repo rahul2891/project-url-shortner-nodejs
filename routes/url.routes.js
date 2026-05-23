@@ -4,7 +4,7 @@ import {db} from "../db/index.js";
 import {urlTable} from "../models/index.js";
 import { nanoid } from "nanoid";
 import { id } from "zod/locales";
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 
 
 const router = express.Router();
@@ -31,6 +31,40 @@ router.post('/shorten', async (req, res) => {
         }).returning({id: urlTable.id, shortCode: urlTable.shortCode, targetUrl: urlTable.targetUrl});
 
     res.status(201).json({ id: result.id, shortCode: result.shortCode, targetUrl: result.targetUrl });
+});
+
+router.get('/my-urls', async (req, res) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'You must be logged in to view your URLs' });
+    }
+
+    const urls = await db.select({
+        id: urlTable.id,
+        shortCode: urlTable.shortCode,
+        targetUrl: urlTable.targetUrl
+    }).from(urlTable).where(eq(urlTable.userId, userId));
+
+    res.json(urls);
+});
+
+router.delete('/:id', async (req, res) => {
+    const userId = req.user?.id;
+
+    if (!userId) {
+        return res.status(401).json({ error: 'You must be logged in to delete URLs' });
+    }
+
+    const urlId = req.params.id;
+
+    const deleteCount = await db.delete(urlTable).where(and(eq(urlTable.id, urlId), eq(urlTable.userId, userId)));
+
+    if (deleteCount === 0) {
+        return res.status(404).json({ error: 'URL not found or you do not have permission to delete it' });
+    }
+
+    res.json({ message: 'URL deleted successfully' });
 });
 
 router.get('/:shortCode', async (req, res) => {
