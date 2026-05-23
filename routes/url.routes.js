@@ -82,3 +82,12 @@ router.get('/:shortCode', async (req, res) => {
 });
 
 export default router;
+
+
+
+
+
+
+
+
+
