@@ -1,4 +1,4 @@
-import { validateToken } from "../utils/token";
+import { validateToken } from "../utils/token.js";
 
 export function authenticationMiddleware(req, res, next) {
     const authHeader = req.headers['authorization'];
@@ -11,7 +11,7 @@ export function authenticationMiddleware(req, res, next) {
         return res.status(401).json({ error: 'Authorization header should start with "Bearer "' });
     }
 
-    const [_, token] = authHeader.split(' ')[1]; // Bearer <token>
+    const token = authHeader.split(' ')[1]; // Bearer <token>
 
    const payload = validateToken(token);
 
